@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
+        <capability name="Map view configurations" minToolsVersion="14.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="TravelBook" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ixH-et-XNk">
+                                <rect key="frame" x="0.0" y="222" width="393" height="518"/>
+                                <standardMapConfiguration key="preferredConfiguration"/>
+                            </mapView>
+                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" misplaced="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Yer ismi" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="OuS-5b-bPs">
+                                <rect key="frame" x="53" y="97" width="288" height="34"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" misplaced="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Yorum" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="mwo-XS-DMY">
+                                <rect key="frame" x="53" y="159" width="288" height="34"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XcP-2w-4px">
+                                <rect key="frame" x="144" y="760" width="105" height="35"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="filled" title="Kaydet"/>
+                                <connections>
+                                    <action selector="saveButtonClicked:" destination="BYZ-38-t0r" eventType="touchUpInside" id="4oZ-ly-cV4"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstItem="mwo-XS-DMY" firstAttribute="centerX" secondItem="ixH-et-XNk" secondAttribute="centerX" id="7t5-Un-eb1"/>
+                            <constraint firstItem="OuS-5b-bPs" firstAttribute="leading" secondItem="mwo-XS-DMY" secondAttribute="leading" id="AFj-WT-6hj"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="XcP-2w-4px" secondAttribute="bottom" constant="23" id="H0R-JQ-iWu"/>
+                            <constraint firstItem="ixH-et-XNk" firstAttribute="top" secondItem="mwo-XS-DMY" secondAttribute="bottom" constant="29" id="QHf-Jw-obI"/>
+                            <constraint firstItem="OuS-5b-bPs" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="WU0-Um-p2F"/>
+                            <constraint firstItem="ixH-et-XNk" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="X0h-yA-Ef9"/>
+                            <constraint firstItem="OuS-5b-bPs" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="53" id="b9g-WT-XS7"/>
+                            <constraint firstItem="mwo-XS-DMY" firstAttribute="centerX" secondItem="XcP-2w-4px" secondAttribute="centerX" id="fm3-1U-e3H"/>
+                            <constraint firstItem="mwo-XS-DMY" firstAttribute="top" secondItem="OuS-5b-bPs" secondAttribute="bottom" constant="28" id="gy1-0J-s67"/>
+                            <constraint firstItem="OuS-5b-bPs" firstAttribute="trailing" secondItem="mwo-XS-DMY" secondAttribute="trailing" id="hfm-G5-a9n"/>
+                            <constraint firstItem="XcP-2w-4px" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="144" id="nkJ-gK-0yf"/>
+                            <constraint firstItem="XcP-2w-4px" firstAttribute="top" secondItem="ixH-et-XNk" secondAttribute="bottom" constant="20" id="vmO-jX-Ry1"/>
+                            <constraint firstItem="OuS-5b-bPs" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="38" id="wfX-Oi-JRn"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="commentText" destination="mwo-XS-DMY" id="Oer-vr-Xap"/>
+                        <outlet property="mapView" destination="ixH-et-XNk" id="Whh-pf-FWi"/>
+                        <outlet property="nameText" destination="OuS-5b-bPs" id="17y-Ca-uwi"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="139.69465648854961" y="3.5211267605633805"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
