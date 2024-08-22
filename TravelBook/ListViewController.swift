@@ -31,14 +31,22 @@ class ListViewController: UIViewController, UITableViewDelegate, UITableViewData
         getData()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        NotificationCenter.default.addObserver(self, selector: #selector(getData) , name: NSNotification.Name("newPlace"), object: nil)
+    }
+    
     @objc func addButtonClicked()
     {
         chosenTitle = ""
         performSegue(withIdentifier: "toViewController", sender: nil)
     }
     
-    func getData()
+    @objc func getData()
     {
+        titleArray.removeAll(keepingCapacity: false)
+           idArray.removeAll(keepingCapacity: false)
+        
+        
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         let context = appDelegate.persistentContainer.viewContext
         
