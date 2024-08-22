@@ -1,48 +1,48 @@
-//
-//  ViewController.swift
-//  TravelBook
-//
-//  Created by Ahmet Hakan Altıparmak on 20.08.2024.
-//
-
 import UIKit
 import MapKit
 import CoreData
-
-
 
 class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDelegate {
 
     @IBOutlet weak var commentText: UITextField!
     @IBOutlet weak var mapView: MKMapView!
-    
     @IBOutlet weak var nameText: UITextField!
-    var locationManager = CLLocationManager()
     
+    var locationManager = CLLocationManager()
+    var userLocation: CLLocationCoordinate2D?
     var chosenLatitude = Double()
     var chosenLongitude = Double()
-    
     var selectedTitle = ""
     var selectedTitleID : UUID?
-    
     var annotationTitle = ""
     var annotationSubtitle = ""
     var annotationLatitude = Double()
     var annotationLongitude = Double()
-    
+    var isAddingNewPlace = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Klavyeyi kapatmak için dokunma algılayıcı ekleyin
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
+        view.addGestureRecognizer(tapGesture)
+        
+        // Geri butonunu ayarla
+        let backButton = UIBarButtonItem()
+        backButton.title = "Geri"
+        navigationItem.backBarButtonItem = backButton
 
         mapView.delegate = self
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestWhenInUseAuthorization()
-        
+        locationManager.startUpdatingLocation()
+
         // Gesture recognizer ekleyin
         let gestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(chooseLocation(gestureRecognizer:)))
         gestureRecognizer.minimumPressDuration = 2
         mapView.addGestureRecognizer(gestureRecognizer)
-        
+
         let saveButton = UIBarButtonItem(title: "Kaydet", style: .plain, target: self, action: #selector(saveButtonClicked))
         navigationItem.rightBarButtonItem = saveButton
 
@@ -50,6 +50,8 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
             // Seçilen yer varsa, verileri CoreData'dan çek
             let appDelegate = UIApplication.shared.delegate as! AppDelegate
             let context = appDelegate.persistentContainer.viewContext
+            
+            saveButton.isHidden = true
             
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Places")
             let idString = selectedTitleID!.uuidString
@@ -72,7 +74,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
                         if let longitude = result.value(forKey: "longitude") as? Double {
                             annotationLongitude = longitude
                         }
-                        
+
                         let annotation = MKPointAnnotation()
                         annotation.title = annotationTitle
                         annotation.subtitle = annotationSubtitle
@@ -82,9 +84,6 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
                         mapView.addAnnotation(annotation)
                         nameText.text = annotationTitle
                         commentText.text = annotationSubtitle
-                        
-                        // Konum güncellemeyi durdur
-                        locationManager.stopUpdatingLocation()
                         
                         // Seçilen yerin konumunu ekranın ortasına al
                         let span = MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
@@ -97,11 +96,13 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
             }
         } else {
             // Yeni veri ekleniyor
-            locationManager.startUpdatingLocation()
+            isAddingNewPlace = true
         }
     }
 
-
+    @objc func hideKeyboard() {
+        view.endEditing(true)
+    }
     
     @objc func chooseLocation(gestureRecognizer: UILongPressGestureRecognizer) {
         if gestureRecognizer.state == .began {
@@ -130,23 +131,18 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         }
     }
     
-    
-
-    @IBAction func saveButtonClicked(_ sender: Any) 
-    {
+    @IBAction func saveButtonClicked(_ sender: Any) {
         // Kaydet butonuna basıldığında yapılacak işlemler
-            guard let name = nameText.text, !name.isEmpty,
-                  !mapView.annotations.isEmpty,
-                  let comment = commentText.text, !comment.isEmpty else {
-                // Eğer alanlar boşsa, kullanıcıya bir uyarı göster
-                let alert = UIAlertController(title: "Eksik Bilgi", message: "Lütfen önce tüm bilgileri doldurun.", preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "Tamam", style: .default, handler: nil))
-                self.present(alert, animated: true, completion: nil)
-                return
-            }
-        
-        
-        
+        guard let name = nameText.text, !name.isEmpty,
+              !mapView.annotations.isEmpty,
+              let comment = commentText.text, !comment.isEmpty else {
+            // Eğer alanlar boşsa, kullanıcıya bir uyarı göster
+            let alert = UIAlertController(title: "Eksik Bilgi", message: "Lütfen önce tüm bilgileri doldurun.", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Tamam", style: .default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
+            return
+        }
+
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         let context = appDelegate.persistentContainer.viewContext
         
@@ -168,44 +164,38 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         navigationController?.popViewController(animated: true)
     }
     
-    
-    
-    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let location = CLLocationCoordinate2D(latitude: locations[0].coordinate.latitude, longitude: locations[0].coordinate.longitude)
-        let span = MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
-        let region = MKCoordinateRegion(center: location, span: span)
-        mapView.setRegion(region, animated: true)
+        if let location = locations.last {
+            userLocation = location.coordinate
+            // Kullanıcının konumunu haritada sürekli olarak göstermeye devam edin
+            if !isAddingNewPlace {
+                let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                let region = MKCoordinateRegion(center: userLocation!, span: span)
+                mapView.setRegion(region, animated: true)
+            }
+            mapView.showsUserLocation = true
+        }
     }
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-          
-          if annotation is MKUserLocation {
-              return nil
-          }
-          
-          let reuseId = "myAnnotation"
-          var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKMarkerAnnotationView
-          
-          if pinView == nil {
-              pinView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-              pinView?.canShowCallout = true
-              pinView?.tintColor = UIColor.black
-              
-              let button = UIButton(type: UIButton.ButtonType.detailDisclosure)
-              pinView?.rightCalloutAccessoryView = button
-              
-          } else {
-              pinView?.annotation = annotation
-          }
-          
-          
-          
-          return pinView
-      }
-
-
+        if annotation is MKUserLocation {
+            return nil
+        }
+        
+        let reuseId = "myAnnotation"
+        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKMarkerAnnotationView
+        
+        if pinView == nil {
+            pinView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+            pinView?.canShowCallout = true
+            pinView?.tintColor = UIColor.black
+            
+            let button = UIButton(type: UIButton.ButtonType.detailDisclosure)
+            pinView?.rightCalloutAccessoryView = button
+        } else {
+            pinView?.annotation = annotation
+        }
+        
+        return pinView
+    }
 }
-
-
-    
