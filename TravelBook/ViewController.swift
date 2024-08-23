@@ -18,6 +18,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
     var annotationSubtitle = ""
     var annotationLatitude = Double()
     var annotationLongitude = Double()
+    var isLocationSet = false
     var isAddingNewPlace = false
 
     override func viewDidLoad() {
@@ -36,7 +37,11 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestWhenInUseAuthorization()
-        locationManager.startUpdatingLocation()
+
+        // Konum güncellemeleri
+        if selectedTitle == "" {
+            locationManager.startUpdatingLocation()
+        }
 
         // Gesture recognizer ekleyin
         let gestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(chooseLocation(gestureRecognizer:)))
@@ -89,6 +94,10 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
                         let span = MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
                         let region = MKCoordinateRegion(center: coordinate, span: span)
                         mapView.setRegion(region, animated: true)
+                        
+                        // Kullanıcı konumunu güncellemeyi durdur
+                        locationManager.stopUpdatingLocation()
+                        isLocationSet = true
                     }
                 }
             } catch {
@@ -97,6 +106,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         } else {
             // Yeni veri ekleniyor
             isAddingNewPlace = true
+            locationManager.stopUpdatingLocation()
         }
     }
 
@@ -142,7 +152,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
             self.present(alert, animated: true, completion: nil)
             return
         }
-
+        
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         let context = appDelegate.persistentContainer.viewContext
         
@@ -153,30 +163,30 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         newPalace.setValue(chosenLatitude, forKey: "latitude")
         newPalace.setValue(chosenLongitude, forKey: "longitude")
         newPalace.setValue(UUID(), forKey: "id")
-        do{
+        do {
             try context.save()
             print("Başarılı")
-        }catch{
+        } catch {
             print("Error")
         }
         
         NotificationCenter.default.post(name: NSNotification.Name("newPlace"), object: nil)
         navigationController?.popViewController(animated: true)
+
     }
-    
+
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let location = locations.last {
-            userLocation = location.coordinate
-            // Kullanıcının konumunu haritada sürekli olarak göstermeye devam edin
-            if !isAddingNewPlace {
-                let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        if isAddingNewPlace {
+            if let location = locations.last {
+                userLocation = location.coordinate
+                let span = MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
                 let region = MKCoordinateRegion(center: userLocation!, span: span)
                 mapView.setRegion(region, animated: true)
+                mapView.showsUserLocation = true
             }
-            mapView.showsUserLocation = true
         }
     }
-    
+
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKUserLocation {
             return nil
@@ -192,10 +202,28 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
             
             let button = UIButton(type: UIButton.ButtonType.detailDisclosure)
             pinView?.rightCalloutAccessoryView = button
+            
         } else {
             pinView?.annotation = annotation
         }
         
         return pinView
+    }
+    
+    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+        if selectedTitle != "" {
+            let requestLocation = CLLocation(latitude: annotationLatitude, longitude: annotationLongitude)
+            CLGeocoder().reverseGeocodeLocation(requestLocation) { (placemarks, error) in
+                if let placemark = placemarks {
+                    if placemark.count > 0 {
+                        let newPlacemark = MKPlacemark(placemark: placemark[0])
+                        let item = MKMapItem(placemark: newPlacemark)
+                        item.name = self.annotationTitle
+                        let launchOptions = [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving]
+                        item.openInMaps(launchOptions: launchOptions)
+                    }
+                }
+            }
+        }
     }
 }
